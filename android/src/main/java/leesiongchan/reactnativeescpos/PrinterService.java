@@ -3,6 +3,7 @@ package leesiongchan.reactnativeescpos;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Base64;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -101,6 +102,13 @@ public class PrinterService {
     public void printImage(String filePath) throws IOException {
         Uri fileUri = Uri.parse(filePath);
         Bitmap image = BitmapFactory.decodeFile(fileUri.getPath());
+        printImage(image);
+    }
+
+    public void printBase64Image(String encodedString) throws IOException {                     
+        final String pureBase64Encoded = encodedString.substring(encodedString.indexOf(",")  + 1);
+        final byte[] decodedString = Base64.decode(pureBase64Encoded, Base64.DEFAULT);
+        Bitmap image = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length); 
         printImage(image);
     }
 
