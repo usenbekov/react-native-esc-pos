@@ -30,6 +30,9 @@ import org.json.JSONObject;
 
 import static io.github.escposjava.print.Commands.*;
 
+import android.app.Activity;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+
 public class EscPosModule extends ReactContextBaseJavaModule {
     public static final String PRINTING_SIZE_58_MM = "PRINTING_SIZE_58_MM";
     public static final String PRINTING_SIZE_80_MM = "PRINTING_SIZE_80_MM";
@@ -271,7 +274,7 @@ public class EscPosModule extends ReactContextBaseJavaModule {
                         .emit("bluetoothDeviceFound", callbackParams);
             }
         });
-        scanManager.startScan();
+        scanManager.startScan(getPermissionAwareActivity());
     }
 
     @ReactMethod
@@ -338,4 +341,21 @@ public class EscPosModule extends ReactContextBaseJavaModule {
             }
         }
     };
+
+    private PermissionAwareActivity getPermissionAwareActivity() {
+        Activity activity = getCurrentActivity();
+    
+        if (activity == null) {
+        //   throw new IllegalStateException(
+        //     "Tried to use permissions API while not attached to an " + "Activity.");
+        return null;
+        } else if (!(activity instanceof PermissionAwareActivity)) {
+        //   throw new IllegalStateException(
+        //     "Tried to use permissions API but the host Activity doesn't"
+        //       + " implement PermissionAwareActivity.");
+        return null;
+        }
+    
+        return (PermissionAwareActivity) activity;
+      }
 }

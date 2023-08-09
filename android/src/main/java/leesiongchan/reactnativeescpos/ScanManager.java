@@ -9,18 +9,26 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+import android.os.Build;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+
 public class ScanManager {
 
     private static final String LOG_TAG = ScanManager.class.getSimpleName();
-    private Context context;
+    private ReactApplicationContext context;
     private BluetoothAdapter bluetoothAdapter;
     private OnBluetoothScanListener onBluetoothScanListener;
+    String[] bluePerms = new String[]{ Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT };
 
     public interface OnBluetoothScanListener {
         void deviceFound(BluetoothDevice bluetoothDevice);
     }
 
-    public ScanManager(Context context, BluetoothAdapter bluetoothAdapter) {
+    public ScanManager(ReactApplicationContext context, BluetoothAdapter bluetoothAdapter) {
         this.context = context;
         this.bluetoothAdapter = bluetoothAdapter;
     }
@@ -28,14 +36,18 @@ public class ScanManager {
     /**
      * Start Scanning for discoverable devices
      */
-    public void startScan() {
+    public void startScan(PermissionAwareActivity activity) {
         Log.d(LOG_TAG, "Start Scan.");
 
         if (onBluetoothScanListener == null) {
             Log.e(LOG_TAG, "You must call registerCallback(...) first!");
         }
 
-        bluetoothAdapter.startDiscovery();
+        if (!hasBluePerms()) {
+            askBluePerms(activity);
+        } else {
+            bluetoothAdapter.startDiscovery();
+        }
     }
 
     /**
@@ -91,4 +103,25 @@ public class ScanManager {
             }
         }
     };
+
+    boolean hasBluePerms() {
+        // do nothing if < android 12
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true;
+        if (allPermissionsGranted(bluePerms)) return true;
+        return false;
+      }
+      
+      void askBluePerms(PermissionAwareActivity activity) {
+        if (activity == null) return;
+        activity.requestPermissions(bluePerms, 1, null);
+      }
+  
+      boolean allPermissionsGranted(String[] permissions) {
+        if (permissions == null) return true;
+        for (int i = 0; i < permissions.length; i++) {
+            if (ContextCompat.checkSelfPermission(context.getBaseContext(), permissions[i]) != PackageManager.PERMISSION_GRANTED)
+                return false;
+        }
+        return true;
+      }
 }
